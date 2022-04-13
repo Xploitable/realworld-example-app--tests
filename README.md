@@ -6,3 +6,4 @@ All of these test presents as the example of my training in GUI and API testing.
 Used technologies and frameworks (the list is supplemented):
 - Postman
 - Selenium (+ Java + JUnit + Maven + Allure)
+- Qase (main TMS for now) + Github App
