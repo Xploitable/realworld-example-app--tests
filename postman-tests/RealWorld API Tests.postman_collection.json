@@ -1,0 +1,803 @@
+{
+	"info": {
+		"_postman_id": "8b3bd8c9-d607-4f02-902f-d914462bba1e",
+		"name": "RealWorld API Tests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Users & Authentication",
+			"item": [
+				{
+					"name": "Creating of new user",
+					"item": [
+						{
+							"name": "[U&A] Create new user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Email/Username are correct\", function () {\r",
+											"    var registerData = pm.response.json();\r",
+											"\r",
+											"    //trying to check equality or email from the response and email from the environment\r",
+											"    pm.expect(registerData.user.email).to.deep.eql(pm.environment.get(\"testEmailReg\"));\r",
+											"    \r",
+											"    //trying to check equality or username from the response and username from the environment\r",
+											"    pm.expect(registerData.user.username).to.deep.eql(pm.environment.get(\"testUnameReg\"));\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Token exists and valid\", function () {\r",
+											"    var registerData = pm.response.json();\r",
+											"\r",
+											"    //trying to check that token's value is not null\r",
+											"    pm.expect(registerData.token).to.not.null;\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"pm.environment.set(\"testEmailReg\", pm.variables.replaceIn('{{$randomEmail}}'));\r",
+											"pm.environment.set(\"testUnameReg\", pm.variables.replaceIn('{{$randomUserName}}'));\r",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disabledSystemHeaders": {
+									"content-length": true,
+									"host": true,
+									"user-agent": true,
+									"accept-encoding": true
+								}
+							},
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"user\": {\r\n        \"username\": \"{{testUnameReg}}\",\r\n        \"email\": \"{{testEmailReg}}\",\r\n        \"password\": \"{{testPassword}}\"\r\n    }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{currentURL}}/users",
+									"host": [
+										"{{currentURL}}"
+									],
+									"path": [
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "[U&A] Registering with credentials of existing user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 422\", function () {\r",
+											"    pm.response.to.have.status(422);\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Email/Username has already been taken\", function () {\r",
+											"    var email = pm.response.json().errors.email[0];\r",
+											"    var username = pm.response.json().errors.username[0];\r",
+											"    pm.expect(email).to.deep.equals(\"has already been taken\");\r",
+											"    pm.expect(username).to.deep.equals(\"has already been taken\");\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"user\": {\r\n        \"username\": \"{{testUname}}\",\r\n        \"email\": \"{{testEmail}}\",\r\n        \"password\": \"{{testPassword}}\"\r\n    }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{currentURL}}/users",
+									"host": [
+										"{{currentURL}}"
+									],
+									"path": [
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "[U&A] Registering with empty fields",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 422\", function () {\r",
+											"    pm.response.to.have.status(422);\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Email can't be blank\", () => {\r",
+											"    var responseBody = pm.response.json();\r",
+											"    pm.expect(responseBody.errors.email[0]).to.equal(\"can't be blank\");\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"user\": {\r\n        \"username\": \"\",\r\n        \"email\": \"\",\r\n        \"password\": \"\"\r\n    }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{currentURL}}/users",
+									"host": [
+										"{{currentURL}}"
+									],
+									"path": [
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "[U&A] Registering: validations check",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 422\", function () {\r",
+											"    pm.response.to.have.status(422);\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Username can't be blank\", () => {\r",
+											"    var responseBody = pm.response.json();\r",
+											"    pm.expect(responseBody.errors.username[0]).to.equal(\"can't be blank\");\r",
+											"    \r",
+											"    //Try to register with blank password field\r",
+											"    registerWithBlankPassword();\r",
+											"\r",
+											"    //Try to register with all fields\r",
+											"    registerWithAllFields_withoutCommercialAt();\r",
+											"\r",
+											"    //Try to register with all fields (add to email commercial at symbol)\r",
+											"    registerWithAllFields_withCommercialAt();\r",
+											"\r",
+											"    //Try to register with all fields (add to email commercial at symbol and domain)\r",
+											"    registerWithAllFields();\r",
+											"});\r",
+											"\r",
+											"function registerWithBlankPassword() {\r",
+											"    var rwbpRequest = {\r",
+											"        url: pm.environment.get(\"currentURL\") + \"/users\",\r",
+											"        method: \"POST\",\r",
+											"        header: {'Content-Type': 'application/json'},\r",
+											"        body: {\r",
+											"            mode: 'raw',\r",
+											"            raw: JSON.stringify({\"user\": {\"username\": pm.variables.replaceIn(\"{{$randomUserName}}\"), \"email\": pm.variables.replaceIn(\"{{$guid}}\"), \"password\": \"\"}})\r",
+											"        }\r",
+											"    };\r",
+											"\r",
+											"    pm.sendRequest(rwbpRequest, (error, response) => {\r",
+											"        if (error) {\r",
+											"            throw Error(error);\r",
+											"        }\r",
+											"\r",
+											"        pm.test(\"Status code is 422\", () => {\r",
+											"            pm.expect(response).to.have.property('code', 422);\r",
+											"        });\r",
+											"\r",
+											"        pm.test(\"Check that password can't be blank\", () => {\r",
+											"            var responseData = response.json();\r",
+											"            pm.expect(responseData.errors.password[0]).to.equal(\"can't be blank\");\r",
+											"        });\r",
+											"    });\r",
+											"}\r",
+											"\r",
+											"function registerWithAllFields_withoutCommercialAt() {\r",
+											"    var rwafRequest = {\r",
+											"        url: pm.environment.get(\"currentURL\") + \"/users\",\r",
+											"        method: \"POST\",\r",
+											"        header: {'Content-Type': 'application/json'},\r",
+											"        body: {\r",
+											"            mode: 'raw',\r",
+											"            raw: JSON.stringify({\"user\": {\"username\": pm.variables.replaceIn(\"{{$randomUserName}}\"), \"email\": pm.variables.replaceIn(\"{{$guid}}\"), \"password\": pm.variables.replaceIn(\"{{$guid}}\")}})\r",
+											"        }\r",
+											"    };\r",
+											"\r",
+											"    pm.sendRequest(rwafRequest, (error, response) => {\r",
+											"        if (error) {\r",
+											"            throw Error(error);\r",
+											"        }\r",
+											"\r",
+											"        pm.test(\"Status code is 422\", () => {\r",
+											"            pm.expect(response).to.have.property('code', 422);\r",
+											"        });\r",
+											"\r",
+											"        pm.test(\"Check that email doesn't contains the '@' symbol\", () => {\r",
+											"            var responseData = response.json();\r",
+											"            pm.expect(responseData.errors.email[0]).to.equal(\"doesn't contains '@' symbol\");\r",
+											"        });\r",
+											"    });\r",
+											"}\r",
+											"\r",
+											"function registerWithAllFields_withCommercialAt() {\r",
+											"    var rwafRequest = {\r",
+											"        url: pm.environment.get(\"currentURL\") + \"/users\",\r",
+											"        method: \"POST\",\r",
+											"        header: {'Content-Type': 'application/json'},\r",
+											"        body: {\r",
+											"            mode: 'raw',\r",
+											"            raw: JSON.stringify({\"user\": {\"username\": pm.variables.replaceIn(\"{{$randomUserName}}\"), \"email\": pm.variables.replaceIn(\"{{$guid}}\") + \"@\", \"password\": pm.variables.replaceIn(\"{{$guid}}\")}})\r",
+											"        }\r",
+											"    };\r",
+											"\r",
+											"    pm.sendRequest(rwafRequest, (error, response) => {\r",
+											"        if (error) {\r",
+											"            throw Error(error);\r",
+											"        }\r",
+											"\r",
+											"        pm.test(\"Status code is 422\", () => {\r",
+											"            pm.expect(response).to.have.property('code', 422);\r",
+											"        });\r",
+											"\r",
+											"        pm.test(\"Check that email doesn't contains the domain part\", () => {\r",
+											"            var responseData = response.json();\r",
+											"            pm.expect(responseData.errors.email[0]).to.equal(\"doesn't contains domain\");\r",
+											"        });\r",
+											"    });\r",
+											"}\r",
+											"\r",
+											"function registerWithAllFields() {\r",
+											"    var newUname = pm.variables.replaceIn(\"{{$randomUserName}}\");\r",
+											"    var newEmail = pm.variables.replaceIn(\"{{$guid}}\") + \"@\" + pm.variables.replaceIn(\"{{$randomDomain}}\");\r",
+											"    var rwafRequest = {\r",
+											"        url: pm.environment.get(\"currentURL\") + \"/users\",\r",
+											"        method: \"POST\",\r",
+											"        header: {'Content-Type': 'application/json'},\r",
+											"        body: {\r",
+											"            mode: 'raw',\r",
+											"            raw: JSON.stringify({\"user\": {\"username\": newUname, \"email\": newEmail, \"password\": pm.variables.replaceIn(\"{{$guid}}\")}})\r",
+											"        }\r",
+											"    };\r",
+											"\r",
+											"    pm.sendRequest(rwafRequest, (error, response) => {\r",
+											"        if (error) {\r",
+											"            throw Error(error);\r",
+											"        }\r",
+											"\r",
+											"        pm.test(\"Status code is 200\", () => {\r",
+											"            pm.expect(response).to.have.property('code', 200);\r",
+											"        });\r",
+											"\r",
+											"        pm.test(\"Check that email and username are correct\", () => {\r",
+											"            var responseData = response.json();\r",
+											"            pm.expect(responseData.user.email).to.equal(newEmail);\r",
+											"            pm.expect(responseData.user.username).to.equal(newUname);\r",
+											"        });\r",
+											"    });\r",
+											"}\r",
+											"\r",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"user\": {\r\n        \"username\": \"\",\r\n        \"email\": \"{{$guid}}\",\r\n        \"password\": \"\"\r\n    }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{currentURL}}/users",
+									"host": [
+										"{{currentURL}}"
+									],
+									"path": [
+										"users"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Existing user login",
+					"item": [
+						{
+							"name": "[U&A] Logging on the existed user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Token exists\", function () {\r",
+											"    var userData = pm.response.json().user;\r",
+											"    pm.expect(userData.token).to.exist;\r",
+											"    pm.environment.set(\"testUserToken\", userData.token)\r",
+											"    if(pm.expect(pm.environment.get(\"testUserToken\")).to.deep.equal(userData.token)) {\r",
+											"        console.log(\"Token stored in environments now!\");\r",
+											"    } else {\r",
+											"        console.log(\"Error while saving the token...\");\r",
+											"    }\r",
+											"    \r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"user\": {\r\n    \"email\": \"{{testEmail}}\",\r\n    \"password\": \"{{testPassword}}\"\r\n  }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{currentURL}}/users/login",
+									"host": [
+										"{{currentURL}}"
+									],
+									"path": [
+										"users",
+										"login"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Get current user",
+					"item": [
+						{
+							"name": "[U&A] Get current user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Email/Username are correct\", function () {\r",
+											"    var userData = pm.response.json();\r",
+											"\r",
+											"    //trying to check equality or email from the response and email from the environment\r",
+											"    try{\r",
+											"        pm.expect(userData.user.email).to.deep.eql(pm.environment.get(\"testEmail\"));\r",
+											"    } catch(eCheckErr) {\r",
+											"        console.log(eCheckErr.message);\r",
+											"    }\r",
+											"    \r",
+											"    //trying to check equality or username from the response and username from the environment\r",
+											"    try {\r",
+											"        pm.expect(userData.user.username).to.deep.eql(pm.environment.get(\"testUname\"));\r",
+											"    } catch(uCheckErr) {\r",
+											"        console.log(uCheckErr.message);\r",
+											"    }\r",
+											"    \r",
+											"    //write to env parameter which indicates that registration credentials are not more valid\r",
+											"    //pm.environment.set(\"areTestCredsValid\", \"false\")\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Token exists and valid\", function () {\r",
+											"    var userData = pm.response.json();\r",
+											"\r",
+											"    //trying to check that token's value is not null\r",
+											"    try {\r",
+											"        pm.expect(userData.token).to.deep.eql(pm.environment.get(\"testUserToken\"));\r",
+											"    } catch(tCheckErr) {\r",
+											"        console.log(tCheckErr);\r",
+											"    }\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{testUserToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{currentURL}}/user",
+									"host": [
+										"{{currentURL}}"
+									],
+									"path": [
+										"user"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Update current user",
+					"item": [
+						{
+							"name": "[U&A] Set new username",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Username has successfully changed\", () => {\r",
+											"    var uname = pm.response.json().user.username;\r",
+											"    var newToken = pm.response.json().user.token;\r",
+											"    if (pm.expect(uname).to.eql(pm.environment.get(\"testNewUname\"))) {\r",
+											"        console.log(\"Username has changed successfully. Restoring the old username...\");\r",
+											"        //get new token\r",
+											"        pm.environment.set(\"testUserToken\", newToken);\r",
+											"        setOldUsername(pm.environment.get(\"testUserToken\"), \"/user\"); \r",
+											"    } else {\r",
+											"        console.log(\"Error during change username\");\r",
+											"    }\r",
+											"});\r",
+											"\r",
+											"\r",
+											"function setOldUsername(token, URL){\r",
+											"    //var userSets;\r",
+											"    var requestDoc = {\r",
+											"        url: pm.environment.get(\"currentURL\") + URL,\r",
+											"        method: \"PUT\",\r",
+											"        header: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token},\r",
+											"        body:{\r",
+											"            mode: \"raw\",\r",
+											"            raw: JSON.stringify({\"user\": {\"username\": pm.environment.get(\"testUname\")}})\r",
+											"        }\r",
+											"    };\r",
+											"\r",
+											"     pm.sendRequest(requestDoc, (error, response) =>{\r",
+											"        if (error) {\r",
+											"            console.log(error);\r",
+											"        } else {\r",
+											"            console.log(response);\r",
+											"        }\r",
+											"\r",
+											"        pm.test(\"Check username has restored\", () => {\r",
+											"            try {\r",
+											"                var resposeData = response.json().user;\r",
+											"                pm.expect(resposeData.username).to.be.deep.equal(pm.environment.get(\"testUname\"));\r",
+											"                pm.environment.set(\"testUserToken\", resposeData.token);\r",
+											"            } catch(err) {\r",
+											"                console.log(err);\r",
+											"            }\r",
+											"        });\r",
+											"    });\r",
+											"    \r",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{testUserToken}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"user\": {\r\n    \"username\": \"{{testNewUname}}\"\r\n  }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{currentURL}}/user",
+									"host": [
+										"{{currentURL}}"
+									],
+									"path": [
+										"user"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "[U&A] Set new email",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"pm.environment.set(\"testNewEmail\", pm.variables.replaceIn('{{$randomEmail}}'));"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Email has changed sucessfully\", function () {\r",
+											"    try {\r",
+											"        var responseData = pm.response.json().user;\r",
+											"        pm.expect(responseData.email).to.equal(pm.environment.get(\"testNewEmail\"));\r",
+											"        pm.environment.set(\"testUserToken\", responseData.token);\r",
+											"        console.log(\"Restoring old email...\");\r",
+											"        restoreOldPassword();\r",
+											"    } catch(err) {\r",
+											"        throw Error(err);\r",
+											"    }\r",
+											"    \r",
+											"});\r",
+											"\r",
+											"function restoreOldPassword() {\r",
+											"    var restoringRequest = {\r",
+											"        url: pm.environment.get(\"currentURL\") + \"/user\",\r",
+											"        method: \"PUT\",\r",
+											"        header: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + pm.environment.get(\"testUserToken\")},\r",
+											"        body: {\r",
+											"            mode: 'raw',\r",
+											"            raw: JSON.stringify({\"user\": {\"email\": pm.environment.get(\"testEmail\")}})\r",
+											"        }\r",
+											"    };\r",
+											"\r",
+											"    pm.sendRequest(restoringRequest, (error, response) => {\r",
+											"        if (error) {\r",
+											"            console.log(error);\r",
+											"        }\r",
+											"\r",
+											"        pm.test(\"Check: old email has restored\", () => {\r",
+											"            try {\r",
+											"                var responseData = response.json().user;\r",
+											"                //console.log(responseData);\r",
+											"                pm.expect(responseData.email).to.deep.equal(pm.environment.get(\"testEmail\"));\r",
+											"                pm.environment.set(\"testUserToken\", responseData.token);\r",
+											"                console.log(\"Old email has restored\");\r",
+											"            } catch(err) {\r",
+											"                throw Error(err);\r",
+											"            }\r",
+											"        });\r",
+											"    });\r",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{testUserToken}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"user\": {\r\n        \"email\": \"{{testNewEmail}}\"\r\n    }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{currentURL}}/user",
+									"host": [
+										"{{currentURL}}"
+									],
+									"path": [
+										"user"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "[U&A] Set new password",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Password has changed sucessfully\", function () {\r",
+											"    try {\r",
+											"        var responseData = pm.response.json().user;\r",
+											"        pm.expect(responseData.username).to.deep.equal(pm.environment.get(\"testUname\"));\r",
+											"        pm.expect(responseData.email).to.deep.equal(pm.environment.get(\"testEmail\"));\r",
+											"        pm.environment.set(\"testUserToken\", responseData.token);\r",
+											"        console.log(\"Check that new password is working\");\r",
+											"        checkNewPassword();\r",
+											"        console.log(\"Restore the old password...\");\r",
+											"        restoreOldPassword();\r",
+											"    } catch(err) {\r",
+											"        throw Error(err);\r",
+											"    }\r",
+											"    \r",
+											"});\r",
+											"\r",
+											"function restoreOldPassword() {\r",
+											"    var restoringRequest = {\r",
+											"        url: pm.environment.get(\"currentURL\") + \"/user\",\r",
+											"        method: \"PUT\",\r",
+											"        header: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + pm.environment.get(\"testUserToken\")},\r",
+											"        body: {\r",
+											"            mode: 'raw',\r",
+											"            raw: JSON.stringify({\"user\": {\"password\": pm.environment.get(\"testPassword\")}})\r",
+											"        }\r",
+											"    };\r",
+											"\r",
+											"    pm.sendRequest(restoringRequest, (error, response) => {\r",
+											"        if (error) {\r",
+											"            console.log(error);\r",
+											"        }\r",
+											"\r",
+											"        pm.test(\"Check: old password has restored\", () => {\r",
+											"            try {\r",
+											"                var responseData = response.json().user;\r",
+											"                //console.log(responseData);\r",
+											"                pm.expect(responseData.username).to.equal(pm.environment.get(\"testUname\"));\r",
+											"                pm.expect(responseData.email).to.deep.equal(pm.environment.get(\"testEmail\"));\r",
+											"                pm.environment.set(\"testUserToken\", responseData.token);\r",
+											"                console.log(\"Old password has restored\");\r",
+											"            } catch(err) {\r",
+											"                throw Error(err);\r",
+											"            }\r",
+											"        });\r",
+											"    });\r",
+											"}\r",
+											"\r",
+											"function checkNewPassword() {\r",
+											"    var checkingRequest = {\r",
+											"        url: pm.environment.get(\"currentURL\") + \"/users/login\",\r",
+											"        method: \"POST\",\r",
+											"        header: {'Content-Type': 'application/json'},\r",
+											"        body: {\r",
+											"            mode: 'raw',\r",
+											"            raw: JSON.stringify({\"user\": {\"email\": pm.environment.get(\"testEmail\"), \"password\": pm.environment.get(\"testNewPassword\")}})\r",
+											"        }\r",
+											"    };\r",
+											"\r",
+											"    pm.sendRequest(checkingRequest, (error, response) => {\r",
+											"        if(error) {\r",
+											"            throw Error(error);\r",
+											"        }\r",
+											"\r",
+											"        pm.test(\"New password is working\", () => {\r",
+											"            try {\r",
+											"                var responseData = response.json().user;\r",
+											"                console.log(responseData);\r",
+											"                pm.expect(responseData.username).to.eql(pm.environment.get(\"testUname\"));\r",
+											"                pm.expect(responseData.email).to.deep.equal(pm.environment.get(\"testEmail\"));\r",
+											"                pm.expect(responseData.token).not.to.null;\r",
+											"                pm.environment.set(\"testUserToken\", responseData.token);\r",
+											"            } catch(err) {\r",
+											"                throw Error(err);\r",
+											"            }\r",
+											"        });\r",
+											"    });\r",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{testUserToken}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"user\": {\r\n        \"password\": \"{{testNewPassword}}\"\r\n    }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{currentURL}}/user",
+									"host": [
+										"{{currentURL}}"
+									],
+									"path": [
+										"user"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	]
+}
