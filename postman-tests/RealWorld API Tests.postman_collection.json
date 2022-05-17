@@ -37,6 +37,7 @@
 											"\r",
 											"    //trying to check that token's value is not null\r",
 											"    pm.expect(registerData.token).to.not.null;\r",
+											"\r",
 											"});"
 										],
 										"type": "text/javascript"
@@ -684,18 +685,14 @@
 											"});\r",
 											"\r",
 											"pm.test(\"Password has changed sucessfully\", function () {\r",
-											"    try {\r",
-											"        var responseData = pm.response.json().user;\r",
-											"        pm.expect(responseData.username).to.deep.equal(pm.environment.get(\"testUname\"));\r",
-											"        pm.expect(responseData.email).to.deep.equal(pm.environment.get(\"testEmail\"));\r",
-											"        pm.environment.set(\"testUserToken\", responseData.token);\r",
-											"        console.log(\"Check that new password is working\");\r",
-											"        checkNewPassword();\r",
-											"        console.log(\"Restore the old password...\");\r",
-											"        restoreOldPassword();\r",
-											"    } catch(err) {\r",
-											"        throw Error(err);\r",
-											"    }\r",
+											"    var responseData = pm.response.json().user;\r",
+											"    pm.expect(responseData.username).to.deep.equal(pm.environment.get(\"testUname\"));\r",
+											"    pm.expect(responseData.email).to.deep.equal(pm.environment.get(\"testEmail\"));\r",
+											"    pm.environment.set(\"testUserToken\", responseData.token);\r",
+											"    console.log(\"Check that new password is working\");\r",
+											"    checkNewPassword();\r",
+											"    console.log(\"Restore the old password...\");\r",
+											"    restoreOldPassword();\r",
 											"    \r",
 											"});\r",
 											"\r",
@@ -794,10 +791,247 @@
 								}
 							},
 							"response": []
+						},
+						{
+							"name": "[U&A] Set new bio",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"//Set new user bio as random GUID value\r",
+											"pm.environment.set(\"testNewBio\", pm.variables.replaceIn(\"{{$guid}}\"));"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});\r",
+											"\r",
+											"pm.test(\"New bio has been set\", function () {\r",
+											"    var responseData = pm.response.json().user;\r",
+											"    pm.expect(responseData.bio).to.equal(pm.environment.get(\"testNewBio\"));\r",
+											"    pm.environment.set(\"testUserToken\", responseData.token);\r",
+											"    //Try to restore the old bio\r",
+											"    restoreOldBio();\r",
+											"});\r",
+											"\r",
+											"function restoreOldBio() {\r",
+											"    var restoringRequest = {\r",
+											"        url: pm.environment.get(\"currentURL\") + \"/user\",\r",
+											"        method: \"PUT\",\r",
+											"        header: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + pm.environment.get(\"testUserToken\")},\r",
+											"        body: {\r",
+											"            mode: 'raw',\r",
+											"            raw: JSON.stringify({\"user\": {\"bio\": \"null\"}})\r",
+											"        }\r",
+											"    };\r",
+											"\r",
+											"    pm.sendRequest(restoringRequest, (error, response) => {\r",
+											"        if (error) {\r",
+											"            console.log(error);\r",
+											"        }\r",
+											"\r",
+											"        pm.test(\"Check: old bio has restored\", () => {\r",
+											"            var responseData = response.json().user;\r",
+											"\r",
+											"            pm.expect(responseData.bio).to.equal(\"null\");\r",
+											"            pm.environment.set(\"testUserToken\", responseData.token);\r",
+											"            console.log(\"Old bio has restored\");\r",
+											"\r",
+											"        });\r",
+											"    });\r",
+											"}\r",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{testUserToken}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"user\": {\r\n        \"bio\": \"{{testNewBio}}\"\r\n    }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{currentURL}}/user",
+									"host": [
+										"{{currentURL}}"
+									],
+									"path": [
+										"user"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "[U&A] Set new profile image",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});\r",
+											"\r",
+											"pm.test(\"New profile image has set\", function () {\r",
+											"    var responseData = pm.response.json().user;\r",
+											"    pm.expect(responseData.image).to.deep.equal(pm.environment.get(\"testNewImage\"));\r",
+											"    pm.environment.set(\"testUserToken\", responseData.token);\r",
+											"    //Try to set up rhe old profile image\r",
+											"    restoreOldProfileImage();\r",
+											"});\r",
+											"\r",
+											"function restoreOldProfileImage() {\r",
+											"    var restoringRequest = {\r",
+											"        url: pm.environment.get(\"currentURL\") + \"/user\",\r",
+											"        method: \"PUT\",\r",
+											"        header: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + pm.environment.get(\"testUserToken\")},\r",
+											"        body: {\r",
+											"            mode: 'raw',\r",
+											"            raw: JSON.stringify({\"user\": {\"image\": pm.environment.get(\"testImage\")}})\r",
+											"        }\r",
+											"    };\r",
+											"\r",
+											"    pm.sendRequest(restoringRequest, (error, response) => {\r",
+											"        if (error) {\r",
+											"            console.log(error);\r",
+											"        }\r",
+											"\r",
+											"        pm.test(\"Check: old profile image has restored\", () => {\r",
+											"            var responseData = response.json().user;\r",
+											"\r",
+											"            pm.expect(responseData.image).to.equal(pm.environment.get(\"testImage\"));\r",
+											"            pm.environment.set(\"testUserToken\", responseData.token);\r",
+											"            console.log(\"Old profile image has restored\");\r",
+											"\r",
+											"        });\r",
+											"    });\r",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{testUserToken}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"user\": {\r\n        \"image\": \"{{testNewImage}}\"\r\n    }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{currentURL}}/user",
+									"host": [
+										"{{currentURL}}"
+									],
+									"path": [
+										"user"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "[U&A] Set new token",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Token hasn't been set\", function () {\r",
+											"    var responseData = pm.response.json().user;\r",
+											"    pm.expect(responseData.token).to.not.equal(\"test.test.test\");\r",
+											"\r",
+											"    //save new generated token to env\r",
+											"    pm.environment.set(\"testUserToken\", responseData.token);\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{testUserToken}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"user\": {\r\n        \"token\": \"test.test.test\"\r\n    }\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{currentURL}}/user",
+									"host": [
+										"{{currentURL}}"
+									],
+									"path": [
+										"user"
+									]
+								}
+							},
+							"response": []
 						}
 					]
 				}
 			]
+		},
+		{
+			"name": "Profile",
+			"item": []
 		}
 	]
 }
