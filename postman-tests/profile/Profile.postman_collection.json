@@ -1,0 +1,217 @@
+{
+	"info": {
+		"_postman_id": "db097d0a-81c4-4346-a031-befe55addf47",
+		"name": "Profile",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "13022801"
+	},
+	"item": [
+		{
+			"name": "[P] Get user profile",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"User that we get are correct\", function () {\r",
+							"    var responseData = pm.response.json().profile;\r",
+							"    pm.expect(responseData.username).to.eql(pm.environment.get(\"testUsername02\"));\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{currentURL}}/profiles/{{testUsername02}}",
+					"host": [
+						"{{currentURL}}"
+					],
+					"path": [
+						"profiles",
+						"{{testUsername02}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "[P] Check the following engine",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var getTheTokenRequest = {\r",
+							"    url: pm.environment.get(\"currentURL\") + \"/users/login\",\r",
+							"    method: \"POST\",\r",
+							"    header: {'Content-Type': 'application/json'},\r",
+							"    body: {\r",
+							"         mode: 'raw',\r",
+							"        raw: JSON.stringify({\"user\": {\"email\": pm.environment.get(\"testEmail01\"), \"password\": pm.environment.get(\"testPassword\")}})\r",
+							"    }\r",
+							"};\r",
+							"\r",
+							"pm.sendRequest(getTheTokenRequest, (error, response) => {\r",
+							"    if (error) {\r",
+							"        console.log(error);\r",
+							"    } else {\r",
+							"        console.log(response.json());\r",
+							"        pm.environment.set(\"testUser01Token\", response.json().user.token);\r",
+							"    }\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"User is followed\", function () {\r",
+							"    var responseData = pm.response.json().profile;\r",
+							"    pm.expect(responseData.following).to.eql(true);\r",
+							"    //unfollow the user\r",
+							"    unfollowUser();\r",
+							"});\r",
+							"\r",
+							"function unfollowUser() {\r",
+							"    var unfollowRequest = {\r",
+							"        url: pm.environment.get(\"currentURL\") + \"/profiles/\" + pm.environment.get(\"testUsername02\") + \"/follow\",\r",
+							"        method: \"DELETE\",\r",
+							"        header: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + pm.environment.get(\"testUser01Token\")},\r",
+							"        body: {\r",
+							"            mode: 'none'\r",
+							"        }\r",
+							"    };\r",
+							"\r",
+							"    pm.sendRequest(unfollowRequest, (error, response) => {\r",
+							"        if (error) {\r",
+							"            console.log(error);\r",
+							"        }\r",
+							"        \r",
+							"        pm.test(\"Status code is 200\", () => {\r",
+							"            pm.expect(response).to.have.property('code', 200);\r",
+							"        });\r",
+							"\r",
+							"        pm.test(\"User has unfollowed\", () => {\r",
+							"            var unfollowResponse = response.json().profile;\r",
+							"            pm.expect(unfollowResponse.following).to.eql(false);\r",
+							"        });\r",
+							"\r",
+							"    });\r",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{testUser01Token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{currentURL}}/profiles/{{testUsername02}}/follow",
+					"host": [
+						"{{currentURL}}"
+					],
+					"path": [
+						"profiles",
+						"{{testUsername02}}",
+						"follow"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "[P] Get profile of the not existed user",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 404\", function () {\r",
+							"    pm.response.to.have.status(404);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Body is empty\", function () {\r",
+							"    pm.expect(pm.response.text()).to.include(\"{}\");\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{currentURL}}/profiles/{{$randomUserName}}",
+					"host": [
+						"{{currentURL}}"
+					],
+					"path": [
+						"profiles",
+						"{{$randomUserName}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "[P] Follow an user without registering or sign in",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 401\", function () {\r",
+							"    pm.response.to.have.status(401);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Error message is «missing authorization credentials»\", function () {\r",
+							"    var responseData = pm.response.json();\r",
+							"    pm.expect(responseData.message).to.eql(\"missing authorization credentials\");\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{currentURL}}/profiles/{{testUsername02}}/follow",
+					"host": [
+						"{{currentURL}}"
+					],
+					"path": [
+						"profiles",
+						"{{testUsername02}}",
+						"follow"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
